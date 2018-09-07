@@ -1,0 +1,12 @@
+Package: cluscmc
+Title: Cluster Based Correction For Multiple Comparisons
+Version: 0.0.0.9000
+Authors@R: person("First", "Last", email = "first.last@example.com",
+                  role = c("aut", "cre"))
+Description: What the package does (one paragraph)
+Depends: R (>= 3.1.0)
+License: MIT + file LICENSE
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
+Suggests: testthat

@@ -1,27 +1,43 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-ccmc
-====
 
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+```{r, include = FALSE}
+# library(rogme)
+devtools::load_all()
+```
+
+# ccmc
 Cluster Correction for Multiple Comparisons (v. 0.0.0.9000)
 
 The goal of ccmc is to correct for multiple comparisons of dependent tests using cluster-based statistics. The rationale for this approach is described [here](https://garstats.wordpress.com/2018/09/06/cluster/).
 
-Installation
-------------
+## Installation
 
 The package can be installed using these commands:
-
-``` r
+```{r eval=FALSE}
 install.packages("devtools")
 devtools::install_github("GRousselet/rogme")
 ```
 
-Example
--------
+
+## Example
 
 Coming soon
 
-``` r
+```{r example}
 #
 ```
+
+

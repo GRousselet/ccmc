@@ -28,7 +28,7 @@ The goal of ccmc is to correct for multiple comparisons of dependent tests using
 The package can be installed using these commands:
 ```{r eval=FALSE}
 install.packages("devtools")
-devtools::install_github("GRousselet/rogme")
+devtools::install_github("GRousselet/ccmc")
 ```
 
 

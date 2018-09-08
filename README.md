@@ -14,7 +14,7 @@ The package can be installed using these commands:
 
 ``` r
 install.packages("devtools")
-devtools::install_github("GRousselet/rogme")
+devtools::install_github("GRousselet/ccmc")
 ```
 
 Example

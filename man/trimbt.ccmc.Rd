@@ -2,33 +2,70 @@
 % Please edit documentation in R/onesamp.R
 \name{trimbt.ccmc}
 \alias{trimbt.ccmc}
-\title{One sample t-test on trimmed means with cluster correction for multiple comparisons}
+\title{One sample percentile bootstrap test with cluster correction for multiple comparisons}
 \usage{
-trimbt.ccmc(x, tr = 0.2, bt = FALSE, nboot = 599)
+trimbt.ccmc(x, nullval = 0, tr = 0.2, alpha = 0.05, bt = TRUE,
+  nboot = 599)
 }
 \arguments{
 \item{x}{A list or a matrix. In the first case
-x[[1]] contains the data for the first group, x[[2]] the data
+x[\link{1}] contains the data for the first group, x[\link{2}] the data
 for the second group, etc. Length(x) = the number of groups = J.
-If stored in a matrix, columns correspond to groups.
+If stored in a matrix, columns correspond to groups.}
 
-[[1]: R:[1
-[[2]: R:[2}
+\item{nullval}{The null value against which to compare the trimmed mean - default = 0.}
 
 \item{tr}{The amount of trimming - default 0.2. Set tr=0 for a t-test on means.}
 
-\item{bt}{Set to TRUE to use critical t values based on boostrap-t distributions - default = FALSE}
+\item{alpha}{Alpha level - default 0.05.}
+
+\item{bt}{Set to TRUE to compute critical t values, p values and confidence intervals based on boostrap-t distributions, otherwise use standard calculations - default = TRUE}
+
+\item{nboot}{Number of bootstrap samples - default = 599}
 }
 \value{
 A list of univariate t values, p values and confidence intervals, as well as cluster-based statistics.
+
+estimate = mean or trimmed mean
+
+ci = confidence interval
+
+tval = t values
+
+pval = p values
+
+cluster.th = cluster threshold
+
+cluster.map = vector of cluster IDs
+
+cluster.sig = statistical significance based on cluster test
 }
 \description{
+One sample percentile bootstrap test with cluster correction for multiple comparisons
+}
+\details{
 One sample t-test on trimmed means with cluster correction for multiple comparisons
 }
 \section{References}{
 NA
 }
 
+\examples{
+# no effect: 
+set.seed(21)
+x <- matrix(rnorm(100), ncol = 5)
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=FALSE,nboot=599)
+# cluster of length 3:
+set.seed(21)
+x <- matrix(rnorm(100), ncol = 5)
+x[,3:5] <- x[,3:5] + 1
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=FALSE,nboot=599)
+# use bootstrap-t thresholds
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=TRUE,nboot=599)
+# get cluster statistics for cluster 1:
+out <- trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=TRUE,nboot=599)
+c2sum <- sum(out$tval[out$cluster.map==1]^2)
+}
 \seealso{
 \code{}
 }

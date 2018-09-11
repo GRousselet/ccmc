@@ -14,8 +14,12 @@ knitr::opts_chunk$set(
 ```
 
 ```{r, include = FALSE}
-# library(rogme)
+# library(ccmc)
 devtools::load_all()
+library(tibble)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
 ```
 
 # ccmc
@@ -26,18 +30,163 @@ The goal of ccmc is to correct for multiple comparisons of dependent tests using
 ## Installation
 
 The package can be installed using these commands:
-```{r eval=FALSE}
+```{r, eval = FALSE}
 install.packages("devtools")
 devtools::install_github("GRousselet/ccmc")
 ```
 
 
-## Example
+## Examples
 
-Coming soon
+### No effect: 5 independent groups
 
-```{r example}
-#
+```{r}
+set.seed(21)
+N <- 40 # observations per group
+Ng <- 5 # number of groups
+x <- matrix(rnorm(N*Ng), ncol = Ng)
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=FALSE,nboot=599)
 ```
 
+### Cluster of length 3 with 5 independent groups
+
+Make data
+```{r}
+set.seed(21)
+N <- 40 # observations per group
+Ng <- 5 # number of groups
+x <- matrix(rnorm(N*Ng), ncol = Ng)
+x[,3:5] <- x[,3:5] + 1
+```
+
+Illustrate data
+```{r}
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# data frame of independent observations
+df <- as.tibble(x)
+colnames(df) <- c("c1", "c2", "c3", "c4", "c5")
+df <- gather(df, condition, value)
+df$condition <- factor(df$condition)
+
+# data frame of means
+tmp <- as_tibble(x)
+colnames(tmp) <- c("c1", "c2", "c3", "c4", "c5")
+df.mean <- tidyr::gather(dplyr::summarise_all(tmp, funs(mean)),condition, value)
+df.mean$condition <- as.factor(df.mean$condition)
+
+ggplot(df, aes(x=condition, y=value, colour=condition)) + theme_grey() + 
+  geom_jitter() +
+  scale_colour_manual(values=cbPalette) +
+  geom_line(data = df.mean, aes(group = 1), colour = "black", size = 1) +
+  geom_point(data = df.mean, colour = "black", size = 3) +
+  geom_abline(slope = 0, intercept = 0) + 
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 14, colour="black"),
+        legend.position="none")
+```
+
+Mass cluster test
+```{r}
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=FALSE,nboot=599)
+```
+
+
+Use bootstrap-t thresholds
+```{r, eval = FALSE}
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=TRUE,nboot=599)
+```
+
+Get cluster statistics for cluster 1:
+```{r, eval = FALSE}
+out <- trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=TRUE,nboot=599)
+c2sum <- sum(out$tval[out$cluster.map==1]^2)
+```
+
+### Cluster of length 2: 5 dependent groups
+
+Make data
+```{r}
+require(MASS)
+set.seed(21)
+Ng <- 5 # n groups
+Np <- 30 # n participants per group
+rho = 0.75 # correlation between repeated measures
+ES <- c(0, 1, 1, 0, 0) # true effects
+sigma <- 1 # population standard deviation
+
+# variance-covariance matrix
+Sigma <- diag(nrow = Ng)
+Sigma[Sigma == 0] <- rho
+
+x <- mvrnorm(Np, ES, Sigma)
+```
+
+Illustrate data
+```{r}
+
+df <- as.tibble(x)
+colnames(df) <- c("c1", "c2", "c3", "c4", "c5")
+df <- gather(df, condition, value)
+df$participant <- factor(rep(seq(1, Np), Ng))
+df$condition <- factor(df$condition)
+
+# data frame of means
+tmp <- as_tibble(x)
+colnames(tmp) <- c("c1", "c2", "c3", "c4", "c5")
+# apply(data, 2, mean) # Mean per group
+df.mean <- tidyr::gather(dplyr::summarise_all(tmp, funs(mean)),condition, value)
+df.mean$condition <- as.factor(df.mean$condition)
+
+ggplot(df, aes(x=condition, y=value)) +
+  geom_line(aes(group=participant, colour=participant)) +
+  geom_line(data = df.mean, aes(group = 1), size = 1) +
+  geom_point(data = df.mean, aes(group = 1), size = 3) +
+  geom_abline(slope = 0, intercept = 0) + 
+  theme(axis.title = element_text(size = 18),
+        axis.text = element_text(size = 14, colour="black"))
+```
+
+Mass cluster test
+```{r}
+trimbt.ccmc(x,nullval=0,tr=0,alpha=.05,bt=FALSE,nboot=599)
+```
+
+
+## Threshold Free Cluster Enhancement
+
+TFCE demo
+```{r}
+x.seq <- seq(1,29)
+data <- c(0,0,0,0,seq(1,11),seq(10,1),0,0,0,0)
+data.tfce <- tfce(data)
+
+df <- tibble(x = rep(x.seq,2),
+             y = c(data/max(data), data.tfce/max(data.tfce)),
+             data = factor(c(rep("Original",29),rep("TFCE",29)))
+             )
+
+ggplot(df, aes(x=x, y=y, colour = data)) + 
+  geom_point(size = 2) +
+  geom_line(size = 0.5) +
+scale_colour_manual(values=c("black","orange"))
+```
+
+TFCE bootstrap data
+```{r}
+nboot <- 1000
+Ng <- 5
+boot.data <- matrix(rnorm(Ng*nboot), ncol = nboot)
+boot.tfce <- tfce(abs(boot.data))
+```
+
+Correct for multiple comparisons using TFCE
+```{r}
+set.seed(21)
+N <- 40 # observations per group
+Ng <- 5 # number of groups
+x <- matrix(rnorm(N*Ng), ncol = Ng)
+x[,3:5] <- x[,3:5] + 1
+trimbt.tfce(x,nullval=0,tr=0,alpha=.05,nboot=599)
+```
 
